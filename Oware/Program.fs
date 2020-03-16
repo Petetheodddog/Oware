@@ -1,8 +1,24 @@
 ﻿module Oware
-
+//--------------------------------------Types--------------------------
 type StartingPosition =
-    | South
-    | North
+  | North
+  | South
+
+type Player = {
+  score: int
+  side: (int*int*int*int*int*int)
+}
+
+type Turn = 
+  | North 
+  | South
+
+type Board = {
+  playerNorth: Player
+  playerSouth: Player
+  PlayerTurn: Turn
+}
+//--------------------------------------End Types--------------------------
 
 let getSeeds n board = failwith "Not implemented"
 
@@ -16,5 +32,7 @@ let gameState board = failwith "Not implemented"
 
 [<EntryPoint>]
 let main _ =
-    printfn "Hello from F#!"
+    let startgame = start North
+
+    //printfn "Hello from F#!"
     0 // return an integer exit code
