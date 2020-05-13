@@ -4,26 +4,27 @@ type StartingPosition =
   | North
   | South
 
-type Player = {
-  score: int
-  side: (int*int*int*int*int*int)
-}
-
-type Turn = 
-  | North 
-  | South
+type State =
+  | Playing
+  | SouthWon
+  | NorthWon
+  | Draw
 
 type Board = {
-  playerNorth: Player
-  playerSouth: Player
-  PlayerTurn: Turn
+  Player:StartingPosition
+
+  Game:(int*int*int*int*int*int*int*int*int*int*int*int)
+
+  Score:(int*int) //(North, South) respectively
+
+  House:int
 }
 //--------------------------------------End Types--------------------------
 
 (*getSeeds, which accepts a House number and a Board, and returns the number of
 seeds in the specified House*)
 let getSeeds n board = 
-  let (a,b,c,d,e,f),(a',b',c',d',e',f') = board.playerNorth.side, board.playerSouth.side
+  let (a,b,c,d,e,f,g,h,i,j,k,l) = board
   match n with 
   |1 -> a
   |2 -> b
@@ -31,64 +32,67 @@ let getSeeds n board =
   |4 -> d
   |5 -> e
   |6 -> f
-  |7 -> a'
-  |8 -> b'
-  |9 -> c'
-  |10 -> d'
-  |11 -> e'
-  |12 -> f'
+  |7 -> g
+  |8 -> h
+  |9 -> i
+  |10 -> j
+  |11 -> k
+  |12 -> l
   |_ -> failwith "invalid House"
 
 
 //sets the chosen house to 0 so its seed(s) can be distributed later
 //take in a board and a house number to modify
-let setHouseZero board n =
-  let (a,b,c,d,e,f),(a',b',c',d',e',f') = board.playerNorth.side, board.playerSouth.side
+let setHouseZero n board =
+  let (a,b,c,d,e,f,g,h,i,j,k,l) = board
   match n with
-  |1 -> {board with playerNorth = {board.playerNorth with side = (0,b,c,d,e,f)}}
-  |2 -> {board with playerNorth = {board.playerNorth with side = (a,0,c,d,e,f)}}
-  |3 -> {board with playerNorth = {board.playerNorth with side = (a,b,0,d,e,f)}}
-  |4 -> {board with playerNorth = {board.playerNorth with side = (a,b,c,0,e,f)}}
-  |5 -> {board with playerNorth = {board.playerNorth with side = (a,b,c,d,0,f)}}
-  |6 -> {board with playerNorth = {board.playerNorth with side = (a,b,c,d,e,0)}}
-  //----------------------------Middle of board----------------------------------------
-  |7 -> {board with playerNorth = {board.playerNorth with side = (0,b',c',d',e',f')}}
-  |8 -> {board with playerNorth = {board.playerNorth with side = (a',0,c',d',e',f')}}
-  |9 -> {board with playerNorth = {board.playerNorth with side = (a',b',0,d',e',f')}}
-  |10 -> {board with playerNorth = {board.playerNorth with side = (a',b',c',0,e',f')}}
-  |11 -> {board with playerNorth = {board.playerNorth with side = (a',b',c',d',0,f')}}
-  |12 -> {board with playerNorth = {board.playerNorth with side = (a',b',c',d',e',0)}}
+  |1 -> (0,b,c,d,e,f,g,h,i,j,k,l)
+  |2 -> (a,0,c,d,e,f,g,h,i,j,k,l)
+  |3 -> (a,b,0,d,e,f,g,h,i,j,k,l)
+  |4 -> (a,b,c,0,e,f,g,h,i,j,k,l)
+  |5 -> (a,b,c,d,0,f,g,h,i,j,k,l)
+  |6 -> (a,b,c,d,e,0,g,h,i,j,k,l)
+  |7 -> (a,b,c,d,e,f,0,h,i,j,k,l)
+  |8 -> (a,b,c,d,e,f,g,0,i,j,k,l)
+  |9 -> (a,b,c,d,e,f,g,h,0,j,k,l)
+  |10 -> (a,b,c,d,e,f,g,h,i,0,k,l)
+  |11 -> (a,b,c,d,e,f,g,h,i,j,0,l)
+  |12 -> (a,b,c,d,e,f,g,h,i,j,k,0)
   |_ -> failwith "Invalid House Number"
-
 
 //Adds a seed to a specified house, will be used l8r
 //takes in a house number to ++ 
-let incrementHouse n (a,b,c,d,e,f,a',b',c',d',e',f') =
+let incrementHouse n board =
+  let (a,b,c,d,e,f,g,h,i,j,k,l) = board
   match n with 
-    |1 -> (a+1,b,c,d,e,f,a',b',c',d',e',f')
-    |2 -> (a,b+1,c,d,e,f,a',b',c',d',e',f')
-    |3 -> (a,b,c+1,d,e,f,a',b',c',d',e',f')
-    |4 -> (a,b,c,d+1,e,f,a',b',c',d',e',f')
-    |5 -> (a,b,c,d,e+1,f,a',b',c',d',e',f')
-    |6 -> (a,b,c,d,e,f+1,a',b',c',d',e',f')
-    //-----------Middle of board-----------
-    |7 -> (a,b,c,d,e,f,a'+1,b',c',d',e',f')
-    |8 -> (a,b,c,d,e,f,a',b'+1,c',d',e',f')
-    |9 -> (a,b,c,d,e,f,a',b',c'+1,d',e',f')
-    |10 -> (a,b,c,d,e,f,a',b',c',d'+1,e',f')
-    |11 -> (a,b,c,d,e,f,a',b',c',d',e'+1,f')
-    |12 -> (a,b,c,d,e,f,a',b',c',d',e',f'+1)
+    |1 -> (a+1,b,c,d,e,f,g,h,i,j,k,l)
+    |2 -> (a,b+1,c,d,e,f,g,h,i,j,k,l)
+    |3 -> (a,b,c+1,d,e,f,g,h,i,j,k,l)
+    |4 -> (a,b,c,d+1,e,f,g,h,i,j,k,l)
+    |5 -> (a,b,c,d,e+1,f,g,h,i,j,k,l)
+    |6 -> (a,b,c,d,e,f+1,g,h,i,j,k,l)
+    |7 -> (a,b,c,d,e,f,g+1,h,i,j,k,l)
+    |8 -> (a,b,c,d,e,f,g,h+1,i,j,k,l)
+    |9 -> (a,b,c,d,e,f,g,h,i+1,j,k,l)
+    |10 -> (a,b,c,d,e,f,g,h,i,j+1,k,l)
+    |11 -> (a,b,c,d,e,f,g,h,i,j,k+1,l)
+    |12 -> (a,b,c,d,e,f,g,h,i,j,k,l+1)
     |_ -> failwith "Invalid House Number"
 
 
 //Adds the seed(s) from a house to the next houses
 //takes in a house number to ++ 
-let distributeSeeds n (a,b,c,d,e,f,a',b',c',d',e',f') =
-  let rec innerF xs out =
-      match xs with
-      | [] -> out
-      | _::rest -> innerF rest (1::out)
-  innerF xs []
+let distributeSeeds n board seeds =
+  let board = setHouseZero n board
+  let rec distribute board n seeds = 
+    match seeds > 0 with 
+    | false -> board
+    | true -> let board = incrementHouse (n+1) board
+              let n = n+1
+              let seeds = seeds-1
+              distribute board n seeds
+  distribute board n seeds
+//I don't think that distributeSeeds function is functional just yet.  
 
 
 
@@ -97,22 +101,7 @@ useHouse: accepts a House number and a Board, and makes a move using
 that House.
 *)
 let useHouse n board = //failwith "Not implemented"
-  let (a,b,c,d,e,f,a',b',c',d',e',f') = board
-  match n with
-  |1 -> 
-  |2 -> 
-  |3 -> 
-  |4 -> 
-  |5 -> 
-  |6 -> 
-  //----------------------------Middle of board----------------------------------------
-  |7 -> 
-  |8 -> 
-  |9 -> 
-  |10 ->
-  |11 ->
-  |12 ->
-  |_ -> failwith "Invalid House Number"
+  distributeSeeds n board (getSeeds n board)
 
 //getSeeds, count the seeds and itt. through them to distribute to Houses greater than the orig, can't use foe's House
 //
@@ -134,7 +123,14 @@ let useHouse n board = //failwith "Not implemented"
 start: accepts a StartingPosition and returns an initialized game where the
 person in the StartingPosition starts the game
 *)
-let start position = failwith "Not implemented"
+let start position = //failwith "Not implemented"
+  let b = {
+    Player=position;
+    Game=(4,4,4,4,4,4,4,4,4,4,4,4);
+    Score=(0,0);
+    House=0
+  }
+  b.Game
 
 
 (*
