@@ -166,8 +166,8 @@ let gameState game = //failwith "Not implemented"
   | Draw -> "Game ended in a draw"
   | NorthWon -> "North Won"
   | SouthWon -> "South Won"
-  | NorthTurn -> "North’s turn"
-  | SouthTurn -> "South’s turn"
+  | NorthTurn -> "North's turn"
+  | SouthTurn -> "South's turn"
   
 
 (*let gameState game = //failwith "Not implemented"
