@@ -99,7 +99,7 @@ let ``Seeds are captured when there are 2 or 3 of them`` () =
     score (playGame [4;7;5;8;2]) |> should equal (2,0)
     score (playGame [4;7;5;8;2;11]) |> should equal (2,4)
 
-[<Test>]//fail
+[<Test>]//pass
 let ``The specified player goes first`` () =
     gameState (start South) |> should equal "South's turn"
     gameState (start North) |> should equal "North's turn"
@@ -118,19 +118,19 @@ let ``A player cannot manipulate their opponent's houses`` () =
     let game = start North in
         useHouse 1 game |> should equal game
 
-[<Test>]//fail
+[<Test>]//pass
 let ``You cannot sow from an empty house`` () =
     let game = playGame [4; 11; 4]
     game |> hasSeedCount (5, 5, 5, 0, 5, 5, 5, 5, 4, 4, 0, 5)
     gameState game |> should equal "South's turn"
 
-[<Test>]//fail
+[<Test>]//pass
 let ``Seeds can't be captured from your own side`` () =
     let game = playGame [1; 7; 2; 8; 3; 9; 4; 12; 5]
     game |> hasSeedCount (4, 3, 2, 1, 0, 9, 5, 3, 2, 9, 9, 1)
     score game |> should equal (0, 0)
 
-[<Test>]//fail
+[<Test>]//pass
 let ``Seeds aren't captured on a non-final space`` () =
     score (playGame [1;9;2;8;4]) |> should equal (0,0)
 
