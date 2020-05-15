@@ -152,8 +152,8 @@ let start (position:StartingPosition) = //failwith "Not implemented"
 (*
 Score: accepts a Board and gives back a tuple of (southScore , northScore)
 *)
-let score game = failwith "Not implemented"
-  //game.Score
+let score game = //failwith "Not implemented"
+  game.Score
 
 
 (*
@@ -168,7 +168,7 @@ let gameState game = //failwith "Not implemented"
   | SouthWon -> "South Won"
   | NorthTurn -> "North's turn"
   | SouthTurn -> "South's turn"
-  
+   
 
 (*let gameState game = //failwith "Not implemented"
   match game.State with 
