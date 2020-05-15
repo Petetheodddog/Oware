@@ -12,7 +12,6 @@ type State =
   | Draw
 
 type Game = {
-  Player:StartingPosition // felt cute, might delete later
   Board:(int*int*int*int*int*int*int*int*int*int*int*int)
   Score:(int*int) //(North, South) respectively
   House:int
@@ -136,9 +135,7 @@ start: accepts a StartingPosition and returns an initialized game where the
 person in the StartingPosition starts the game
 *)
 let start (position:StartingPosition) = //failwith "Not implemented"
-  //let g = {
   {
-    Player = position;
     Board = (4,4,4,4,4,4,4,4,4,4,4,4);
     Score = (0,0);
     House = 0; 
@@ -146,7 +143,6 @@ let start (position:StartingPosition) = //failwith "Not implemented"
             | North -> NorthTurn
             | South -> SouthTurn
   }
-  //g.Board
 
 
 (*
@@ -169,26 +165,17 @@ let gameState game = //failwith "Not implemented"
   | NorthTurn -> "North's turn"
   | SouthTurn -> "South's turn"
    
-
-(*let gameState game = //failwith "Not implemented"
-  match game.State with 
-  | NorthTurn -> "North’s turn"
-  | SouthTurn -> "South’s turn"
-  | Draw -> "Game ended in a draw"
-  | NorthWon -> "North Won"
-  | SouthWon -> "South Won"*)
-
-(*let playGame numbers =
+let playGame numbers =
     let rec play xs game =
         match xs with
         | [] -> game
         | x::xs -> play xs (useHouse x game)
-    play numbers (start South)*)
+    play numbers (start South)
 
 [<EntryPoint>]
 let main _ =
 
-    let startgame = (start North)
+    //let startgame = (start North)
 
     //printfn "Hello from F#!"
     0 // return an integer exit code
