@@ -10,10 +10,10 @@ type State =
   | NorthWon
   | Draw
 
-type Board = {
+type Game = {
   Player:StartingPosition
 
-  Game:(int*int*int*int*int*int*int*int*int*int*int*int)
+  Board:(int*int*int*int*int*int*int*int*int*int*int*int)
 
   Score:(int*int) //(North, South) respectively
 
@@ -24,7 +24,7 @@ type Board = {
 (*getSeeds, which accepts a House number and a Board, and returns the number of
 seeds in the specified House*)
 let getSeeds n board = 
-  let (a,b,c,d,e,f,g,h,i,j,k,l) = board
+  let (a,b,c,d,e,f,g,h,i,j,k,l : int) = board
   match n with 
   |1 -> a
   |2 -> b
@@ -82,26 +82,41 @@ let incrementHouse n board =
 
 //Adds the seed(s) from a house to the next houses
 //takes in a house number to ++ 
-let distributeSeeds n board seeds =
-  let board = setHouseZero n board
-  let rec distribute board n seeds = 
+let distributeSeeds hNum board seeds =
+  
+  let board = setHouseZero hNum board
+  let rec distribute board hNum seeds = 
+    let hNum =  // wrap around when gets to house 12
+      match (hNum % 13) with
+      | 0 -> 1
+      | _ -> hNum
     match seeds > 0 with 
     | false -> board
-    | true -> let board = incrementHouse (n+1) board
-              let n = n+1
+    | true -> let board = incrementHouse (hNum+1) board
+              let hNum = (hNum+1) 
               let seeds = seeds-1
-              distribute board n seeds
-  distribute board n seeds
+              distribute board hNum seeds
+  distribute board hNum seeds 
+  
 //I don't think that distributeSeeds function is functional just yet.  
 
-
+let swapTurn board = 
+  let board =
+    match (board.Player) with
+    | North -> {board with Player = South}
+    | _ -> {board with Player = North}
+  board
 
 (*
 useHouse: accepts a House number and a Board, and makes a move using
 that House.
 *)
 let useHouse n board = //failwith "Not implemented"
-  distributeSeeds n board (getSeeds n board)
+  let hSeeds = (getSeeds n board)
+  match hSeeds with
+  | 0 -> failwith "cannot remove seeds from house with zero seeds"
+  | _ -> distributeSeeds n board (getSeeds n board)
+  
 
 //getSeeds, count the seeds and itt. through them to distribute to Houses greater than the orig, can't use foe's House
 //
@@ -124,13 +139,13 @@ start: accepts a StartingPosition and returns an initialized game where the
 person in the StartingPosition starts the game
 *)
 let start position = //failwith "Not implemented"
-  let b = {
+  let g = {
     Player=position;
-    Game=(4,4,4,4,4,4,4,4,4,4,4,4);
+    Board=(4,4,4,4,4,4,4,4,4,4,4,4);
     Score=(0,0);
     House=0
   }
-  b.Game
+  g.Board
 
 
 (*
