@@ -94,7 +94,7 @@ let ``When house 12 is used, seeds go to the other houses`` () =
     let board = start North |> useHouse 12
     board |> hasSeedCount (5,5,5,5,4,4,4,4,4,4,4,0)
 
-[<Test>]//fail
+[<Test>]//pass
 let ``Seeds are captured when there are 2 or 3 of them`` () =
     score (playGame [4;7;5;8;2]) |> should equal (2,0)
     score (playGame [4;7;5;8;2;11]) |> should equal (2,4)
@@ -104,14 +104,14 @@ let ``The specified player goes first`` () =
     gameState (start South) |> should equal "South's turn"
     gameState (start North) |> should equal "North's turn"
 
-[<Test>]//fail
+[<Test>]//pass
 let ``The player turns alternate`` () =
     let game = start South
     gameState game |> should equal "South's turn"
     let takenturn = useHouse 1 game
     gameState takenturn |> should equal "North's turn"
 
-[<Test>]//fail
+[<Test>]//pass
 let ``A player cannot manipulate their opponent's houses`` () =
     let game = start South in
         useHouse 10 game |> should equal game
@@ -134,38 +134,38 @@ let ``Seeds can't be captured from your own side`` () =
 let ``Seeds aren't captured on a non-final space`` () =
     score (playGame [1;9;2;8;4]) |> should equal (0,0)
 
-[<Test>]//fail
+[<Test>]//pass
 let ``Contiguous captured seeds are taken`` () =
     let game = playGame [1; 12; 5; 11; 2; 10; 3]
     game |> hasSeedCount (3, 1, 0, 8, 2, 7, 7, 7, 7, 1, 0, 0)
     score game |> should equal (5, 0)
     gameState game |> should equal "North's turn"
 
-[<Test>]//fail
+[<Test>]//pass
 let ``The original house is skipped when sowing seeds`` () =
     let game = playGame [1; 7; 2; 9; 3; 10; 1; 11; 2; 9; 4; 7; 5; 12; 3; 11; 6]
     game |> hasSeedCount (6, 4, 1, 3, 3, 0, 5, 12, 6, 5, 1, 2)
 
-[<Test>]//fail
+[<Test>]//pass
 let ``Non-contiguous captured seeds are not taken`` () =
     let game = playGame [1; 12; 3; 10; 5; 8; 1; 12; 3; 10; 4; 8; 2]
     game |> hasSeedCount (2, 0, 1, 1, 2, 8, 8, 1, 10, 2, 10, 0)
     score game |> should equal (3, 0)
 
-[<Test>]//fail
+[<Test>]//pass
 let ``Contiguous seeds from the player's houses are not taken`` () =
     let game = playGame [1; 8; 6; 10; 3; 12; 4; 12; 5; 9; 2; 8]
     game |> hasSeedCount (0, 0, 3, 2, 2, 1, 9, 0, 2, 5, 10, 3)
     score game |> should equal (0, 11)
 
-[<Test>]//fail
+[<Test>]//pass
 let ``The side with 25 or more seeds wins`` () =
     let game = playGame [2; 11; 3; 10; 4; 12; 1; 8; 6; 7; 5; 12; 2; 11; 1; 10]
     game |> hasSeedCount (1, 0, 0, 1, 0, 1, 1, 3, 10, 0, 1, 2)
     score game |> should equal (0, 28)
     gameState game |> should equal "North won"
 
-[<Test>]//fail
+[<Test>]//fail//fail
 let ``Must play to give opponent pieces, if they have none`` () =
     let game = playGame [6; 8; 5; 9; 4; 12; 3; 10; 1; 11; 2; 12; 5; 7; 5; 11; 6; 8; 1; 12; 4; 10; 5; 9;
  2; 11; 3; 12; 6; 9; 5; 10; 2; 11; 1; 12; 4; 7; 6; 7; 3; 8; 5; 9; 6; 10; 1; 11;
@@ -174,7 +174,7 @@ let ``Must play to give opponent pieces, if they have none`` () =
     score game |> should equal (22, 22)
     gameState game |> should equal "South's turn"
 
-[<Test>]//fail
+[<Test>]//fail//fail
 let ``Can't capture pieces if that would remove all pieces from opponent's board.`` () =
     let game = playGame [6; 8; 5; 9; 4; 12; 3; 10; 1; 11; 2; 12; 5; 7; 5; 11; 6; 8; 1; 12; 4; 10; 5; 9;
  2; 11; 3; 12; 6; 9; 5; 10; 2; 11; 1; 12; 4; 7; 6; 7; 3; 8; 5; 9; 6; 10; 1; 11;
@@ -183,7 +183,7 @@ let ``Can't capture pieces if that would remove all pieces from opponent's board
     score game |> should equal (22, 22)
     gameState game |> should equal "North's turn"
 
-[<Test>]//fail
+[<Test>]//pass
 let ``A draw exists when each side has 24 pieces`` () =
     let game = playGame [6; 8; 5; 9; 4; 12; 3; 10; 1; 11; 2; 12; 5; 7; 5; 11; 6; 8; 1; 12; 4; 10; 5; 9;
  2; 11; 3; 12; 6; 9; 5; 10; 2; 11; 1; 12; 4; 7; 6; 7; 3; 8; 5; 9; 6; 10; 1; 11;

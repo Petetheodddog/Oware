@@ -12,8 +12,9 @@ type State =
   | Draw
 
 type Game = {
+  Player:StartingPosition
   Board:(int*int*int*int*int*int*int*int*int*int*int*int)
-  Score:(int*int) //(North, South) respectively
+  Score:(int*int) //(South, North) respectively
   House:int
   State:State
 }
@@ -106,29 +107,83 @@ let wrapAround hNum = // wrap around when gets to house 12
 let swapTurn game = 
   let game =
     match (game.State) with
-    | NorthTurn -> {game with State = SouthTurn}
-    | SouthTurn -> {game with State = NorthTurn}
+    | NorthTurn -> {game with State = SouthTurn; Player = South}
+    | SouthTurn -> {game with State = NorthTurn; Player = North}
     | _ -> game
   game
 
+let oppSide hNum game = 
+  match game.Player with 
+  | North -> match (hNum < 7) with 
+             | true -> true
+             | false -> false
+  | South -> match (hNum >= 7) with 
+             | true -> true
+             | false -> false
+
+let rec captureSeeds hNum game =
+  let seeds = getSeeds hNum game
+  let (s,n) = game.Score
+  let game = (setHouseZero hNum game)
+  let game = 
+    {game with 
+      Score = 
+        match game.Player with
+        | North -> (s, n+seeds)
+        | South -> (s+seeds, n)}
+  //change value of hNum to check for captureable seeds      
+  let hNum = 
+    match hNum-1 with 
+    | 0 -> 12
+    | _ -> hNum-1
+  match (getSeeds hNum game), (oppSide hNum game) with
+  | (2|3), true -> captureSeeds hNum game
+  | _, _ -> game
+
+let getState game = 
+   let (s,n) = game.Score
+   match s > 24 with 
+   |true -> let game = {game with State = SouthWon}
+            game
+   |false -> match (n > 24)  with 
+             | true -> let game = {game with State = NorthWon}
+                       game
+             | false -> match s = 24 && n = 24 with 
+                        |true ->  let game = {game with State = Draw}
+                                  game
+                        |false -> game
 (*
 useHouse: accepts a House number and a Board, and makes a move using
 that House.
 *)
 let useHouse hNum game = //failwith "Not implemented"
-  let numSeeds = (getSeeds hNum game)
-  let game = setHouseZero hNum game
+  let oHouse = hNum
+  match (oppSide hNum game) with //check that player is not manipulating opponents house
+  | true -> game
+  | false ->  match (getSeeds hNum game) with //check that a house has seeds to sow
+              | 0 ->  game
+              | _ ->  let numSeeds = (getSeeds hNum game)
+                      let game = setHouseZero hNum game
+                   
+                      let rec distribute game hNum seeds = 
+                        let hNum = wrapAround hNum
+                        match seeds > 0 with 
+                        | false ->  match (getSeeds hNum game), (oppSide hNum game) with
+                                    | (2|3), true -> captureSeeds hNum game
+                                    | _, _ -> game
+                        | true -> match (oHouse = hNum+1) with //this match skips original house when sowing seeds
+                                  | true -> let game = incrementHouse (wrapAround (hNum+2)) game
+                                            let seeds = seeds-1
+                                            let hNum = hNum+2
+                                            distribute game hNum seeds
+                                  | false -> let game = incrementHouse (wrapAround (hNum+1)) game
+                                             let seeds = seeds-1
+                                             let hNum = hNum+1
+                                             distribute game hNum seeds
+                      
+                      getState (swapTurn (distribute game hNum numSeeds))
+  
 
-  let rec distribute game hNum seeds = 
-    let hNum = wrapAround hNum
-    match seeds > 0 with 
-    | false ->  game
-    | true -> let game = incrementHouse (wrapAround (hNum+1)) game
-              let seeds = seeds-1
-              let hNum = hNum+1
-              distribute game hNum seeds
-  distribute game hNum numSeeds
- 
 
 (*
 start: accepts a StartingPosition and returns an initialized game where the
@@ -136,6 +191,7 @@ person in the StartingPosition starts the game
 *)
 let start (position:StartingPosition) = //failwith "Not implemented"
   {
+    Player = position
     Board = (4,4,4,4,4,4,4,4,4,4,4,4);
     Score = (0,0);
     House = 0; 
@@ -160,8 +216,8 @@ draw”, “South won”, and “North won”.
 let gameState game = //failwith "Not implemented"
   match game.State with 
   | Draw -> "Game ended in a draw"
-  | NorthWon -> "North Won"
-  | SouthWon -> "South Won"
+  | NorthWon -> "North won"
+  | SouthWon -> "South won"
   | NorthTurn -> "North's turn"
   | SouthTurn -> "South's turn"
    
