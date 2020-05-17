@@ -87,16 +87,6 @@ let incrementHouse n game =
                 |_ -> failwith "Invalid House Number"}
   game
 
-let checkValid hNum game =
-  match game.State with 
-  | NorthTurn -> match hNum < 7 with
-                 | true -> failwith "invalid house, choose one from your own side"
-                 | false -> ()
-  | SouthTurn -> match hNum >=7 with
-                 | true -> ()
-                 | false -> failwith "invalid house, choose one from your own side"
-  | _ -> ()
-
 let wrapAround hNum = // wrap around when gets to house 12
     match (hNum % 13) with
     | 0 -> 1
@@ -112,6 +102,7 @@ let swapTurn game =
     | _ -> game
   game
 
+//used to check if player is selecting house from oppponents side
 let oppSide hNum game = 
   match game.Player with 
   | North -> match (hNum < 7) with 
@@ -128,6 +119,7 @@ let sumSide game =
   let northSeeds = a'+b'+c'+d'+e'+f'
   (southSeeds, northSeeds)
 
+//captures the seeds from a house, uses game and saves a spare copy in spareGame, incase starvation occurs
 let rec captureSeeds hNum game spareGame=
   let seeds = getSeeds hNum game
   let (s,n) = game.Score
@@ -138,11 +130,12 @@ let rec captureSeeds hNum game spareGame=
         match game.Player with
         | North -> (s, n+seeds)
         | South -> (s+seeds, n)}
-  //change value of hNum to check for captureable seeds      
-  let hNum = 
+  
+  let hNum =         //change value of hNum to check for more captureable seeds      
     match hNum-1 with 
     | 0 -> 12
     | _ -> hNum-1
+    
   match (getSeeds hNum game), (oppSide hNum game) with
   | (2|3), true -> captureSeeds hNum game spareGame
   | _, _ -> match game.Player, (sumSide game) with // this match checks that the move made does not remove all the seeds from opponents side
@@ -153,21 +146,22 @@ let rec captureSeeds hNum game spareGame=
 
 let getState game = 
    let (s,n) = game.Score
-   match s > 24 with 
+   match s > 24 with // this match checks if south has captured more than 24 seeds and won
    |true -> let game = {game with State = SouthWon}
             game
-   |false -> match (n > 24)  with 
+   |false -> match (n > 24)  with  // match checks if north has captured more than 24 seeds and won
              | true -> let game = {game with State = NorthWon}
                        game
-             | false -> match s = 24 && n = 24 with 
+             | false -> match s = 24 && n = 24 with // this match checks if the game has ended in a draw
                         |true ->  let game = {game with State = Draw}
                                   game
                         |false -> game
+                        
 (*
 useHouse: accepts a House number and a Board, and makes a move using
 that House.
 *)
-let useHouse hNum game = //failwith "Not implemented"
+let useHouse hNum game = 
   let oHouse = hNum
   match (oppSide hNum game) with //check that player is not manipulating opponents house
   | true -> game
@@ -183,7 +177,7 @@ let useHouse hNum game = //failwith "Not implemented"
                         | false ->  match game.Player, (sumSide game) with
                                     | North, (0, _) -> swapTurn spareGame           
                                     | South, (_, 0) -> swapTurn spareGame
-                                    | _, _ -> match (getSeeds hNum game), (oppSide hNum game) with
+                                    | _, _ -> match (getSeeds hNum game), (oppSide hNum game) with //this match checks if seeds can be captured
                                               | (2|3), true -> captureSeeds hNum game game
                                               | _, _ -> game
                         | true -> match (oHouse = hNum+1) with //this match skips original house when sowing seeds
@@ -197,14 +191,13 @@ let useHouse hNum game = //failwith "Not implemented"
                                              distribute game hNum seeds spareGame
                       
                       getState (swapTurn (distribute game hNum numSeeds spare))
-  
 
 
 (*
 start: accepts a StartingPosition and returns an initialized game where the
 person in the StartingPosition starts the game
 *)
-let start (position:StartingPosition) = //failwith "Not implemented"
+let start (position:StartingPosition) = 
   {
     Player = position
     Board = (4,4,4,4,4,4,4,4,4,4,4,4);
@@ -219,34 +212,59 @@ let start (position:StartingPosition) = //failwith "Not implemented"
 (*
 Score: accepts a Board and gives back a tuple of (southScore , northScore)
 *)
-let score game = //failwith "Not implemented"
+let score game = 
   game.Score
-
 
 (*
 gameState: accepts a Board and gives back a string that tells us about the
 state of the game. Valid strings are “South’s turn”, “North’s turn”, “Game ended in a
 draw”, “South won”, and “North won”.
 *)
-let gameState game = //failwith "Not implemented"
+let gameState game = 
   match game.State with 
   | Draw -> "Game ended in a draw"
   | NorthWon -> "North won"
   | SouthWon -> "South won"
   | NorthTurn -> "North's turn"
   | SouthTurn -> "South's turn"
-   
-let playGame numbers =
-    let rec play xs game =
-        match xs with
-        | [] -> game
-        | x::xs -> play xs (useHouse x game)
-    play numbers (start South)
+
+//impure output
+let outputGame game = //function that takes in a game and prints out the Board and scores
+  let (a,b,c,d,e,f,a',b',c',d',e',f') = game.Board
+  let (s,n) = game.Score
+  System.Console.Clear()
+  printfn "\n%s\n                           " (gameState game)
+  printfn "       {North score}             " 
+  printfn "          |~~%i~~|\n             " n
+  printfn "  [%i]-[%i]-[%i]-[%i]-[%i]-[%i]\n" f' e' d' c' b' a'  //start bottom left to move in counter-clockwise direction
+  printfn "  [%i]-[%i]-[%i]-[%i]-[%i]-[%i]\n" a b c d e f 
+  printfn "          |~~%i~~|               " s
+  printfn "       {South score}\n           "
+  ()
+
+let getUserInput game= // impure
+  let rec getConsoleInput () = 
+    printf "Please enter a house to move: South(1-6) North(12-7):   "
+    let retry () = printfn "Invalid selection, try again" |> getConsoleInput
+    let input = System.Console.ReadLine()
+    match input with
+    | ("1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"10"|"11"|"12") -> int input
+    | _ -> retry ()
+  getConsoleInput()
 
 [<EntryPoint>]
 let main _ =
 
-    //let startgame = (start North)
+  let startgame = (start South) //choose who starts
+  outputGame startgame
+  let rec playGame input game =
+    match game.State with 
+    | Draw | NorthWon | SouthWon -> gameState game
+    | _ -> let game = useHouse input game
+           outputGame game
+           playGame (getUserInput game) game
 
-    //printfn "Hello from F#!"
-    0 // return an integer exit code
+  let final = playGame (getUserInput startgame) startgame
+
+  //printfn "Hello from F#!"
+  0 // return an integer exit code
