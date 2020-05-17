@@ -165,7 +165,7 @@ let ``The side with 25 or more seeds wins`` () =
     score game |> should equal (0, 28)
     gameState game |> should equal "North won"
 
-[<Test>]//fail//fail
+[<Test>]//pass
 let ``Must play to give opponent pieces, if they have none`` () =
     let game = playGame [6; 8; 5; 9; 4; 12; 3; 10; 1; 11; 2; 12; 5; 7; 5; 11; 6; 8; 1; 12; 4; 10; 5; 9;
  2; 11; 3; 12; 6; 9; 5; 10; 2; 11; 1; 12; 4; 7; 6; 7; 3; 8; 5; 9; 6; 10; 1; 11;
@@ -174,7 +174,7 @@ let ``Must play to give opponent pieces, if they have none`` () =
     score game |> should equal (22, 22)
     gameState game |> should equal "South's turn"
 
-[<Test>]//fail//fail
+[<Test>]//pass
 let ``Can't capture pieces if that would remove all pieces from opponent's board.`` () =
     let game = playGame [6; 8; 5; 9; 4; 12; 3; 10; 1; 11; 2; 12; 5; 7; 5; 11; 6; 8; 1; 12; 4; 10; 5; 9;
  2; 11; 3; 12; 6; 9; 5; 10; 2; 11; 1; 12; 4; 7; 6; 7; 3; 8; 5; 9; 6; 10; 1; 11;

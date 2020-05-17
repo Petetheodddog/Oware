@@ -121,7 +121,14 @@ let oppSide hNum game =
              | true -> true
              | false -> false
 
-let rec captureSeeds hNum game =
+//need to check if either side has 0 seeds.
+let sumSide game = 
+  let (a,b,c,d,e,f,a',b',c',d',e',f') = game.Board
+  let southSeeds = a+b+c+d+e+f
+  let northSeeds = a'+b'+c'+d'+e'+f'
+  (southSeeds, northSeeds)
+
+let rec captureSeeds hNum game spareGame=
   let seeds = getSeeds hNum game
   let (s,n) = game.Score
   let game = (setHouseZero hNum game)
@@ -137,8 +144,12 @@ let rec captureSeeds hNum game =
     | 0 -> 12
     | _ -> hNum-1
   match (getSeeds hNum game), (oppSide hNum game) with
-  | (2|3), true -> captureSeeds hNum game
-  | _, _ -> game
+  | (2|3), true -> captureSeeds hNum game spareGame
+  | _, _ -> match game.Player, (sumSide game) with // this match checks that the move made does not remove all the seeds from opponents side
+            | _, (0, 0) -> game                    // if it does, then revert to not capturing the seeds and leave the game to continue
+            | North, (0, _) -> spareGame           
+            | South, (_, 0) -> spareGame
+            | _, _ -> game
 
 let getState game = 
    let (s,n) = game.Score
@@ -162,26 +173,30 @@ let useHouse hNum game = //failwith "Not implemented"
   | true -> game
   | false ->  match (getSeeds hNum game) with //check that a house has seeds to sow
               | 0 ->  game
-              | _ ->  let numSeeds = (getSeeds hNum game)
+              | _ ->  let spare = game  //spare copy of game in case a rollback on the move is needed
+                      let numSeeds = (getSeeds hNum game)
                       let game = setHouseZero hNum game
                    
-                      let rec distribute game hNum seeds = 
+                      let rec distribute game hNum seeds spareGame = 
                         let hNum = wrapAround hNum
-                        match seeds > 0 with 
-                        | false ->  match (getSeeds hNum game), (oppSide hNum game) with
-                                    | (2|3), true -> captureSeeds hNum game
-                                    | _, _ -> game
+                        match seeds > 0 with //till no more seeds are left to distribute 
+                        | false ->  match game.Player, (sumSide game) with
+                                    | North, (0, _) -> swapTurn spareGame           
+                                    | South, (_, 0) -> swapTurn spareGame
+                                    | _, _ -> match (getSeeds hNum game), (oppSide hNum game) with
+                                              | (2|3), true -> captureSeeds hNum game game
+                                              | _, _ -> game
                         | true -> match (oHouse = hNum+1) with //this match skips original house when sowing seeds
                                   | true -> let game = incrementHouse (wrapAround (hNum+2)) game
                                             let seeds = seeds-1
                                             let hNum = hNum+2
-                                            distribute game hNum seeds
+                                            distribute game hNum seeds spareGame
                                   | false -> let game = incrementHouse (wrapAround (hNum+1)) game
                                              let seeds = seeds-1
                                              let hNum = hNum+1
-                                             distribute game hNum seeds
+                                             distribute game hNum seeds spareGame
                       
-                      getState (swapTurn (distribute game hNum numSeeds))
+                      getState (swapTurn (distribute game hNum numSeeds spare))
   
 
 
