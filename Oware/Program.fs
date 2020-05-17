@@ -40,7 +40,6 @@ let  getSeeds n game =
   |12 -> l
   |_ -> failwith "invalid House"
 
-
 //sets the chosen house to 0 so its seed(s) can be distributed later
 //take in a board and a house number to modify
 let setHouseZero n game =
@@ -87,13 +86,13 @@ let incrementHouse n game =
                 |_ -> failwith "Invalid House Number"}
   game
 
-let wrapAround hNum = // wrap around when gets to house 12
+//wrap around when gets to house 12
+let wrapAround hNum = 
     match (hNum % 13) with
     | 0 -> 1
-    | _ -> hNum
-      
+    | _ -> hNum 
 
-// Swaps the turn to next side
+//swaps the turn to next side
 let swapTurn game = 
   let game =
     match (game.State) with
@@ -130,8 +129,9 @@ let rec captureSeeds hNum game spareGame=
         match game.Player with
         | North -> (s, n+seeds)
         | South -> (s+seeds, n)}
-  
-  let hNum =         //change value of hNum to check for more captureable seeds      
+
+  //change value of hNum to check for more captureable seeds
+  let hNum =               
     match hNum-1 with 
     | 0 -> 12
     | _ -> hNum-1
@@ -144,6 +144,7 @@ let rec captureSeeds hNum game spareGame=
             | South, (_, 0) -> spareGame
             | _, _ -> game
 
+//gets the current state of the game, in particular the end states: SouthWon, NorthWon & Draw
 let getState game = 
    let (s,n) = game.Score
    match s > 24 with // this match checks if south has captured more than 24 seeds and won
@@ -228,7 +229,7 @@ let gameState game =
   | NorthTurn -> "North's turn"
   | SouthTurn -> "South's turn"
 
-//impure output
+//impure output: 12 lines (all inclusive)
 let outputGame game = //function that takes in a game and prints out the Board and scores
   let (a,b,c,d,e,f,a',b',c',d',e',f') = game.Board
   let (s,n) = game.Score
@@ -242,7 +243,8 @@ let outputGame game = //function that takes in a game and prints out the Board a
   printfn "       {South score}\n           "
   ()
 
-let getUserInput game= // impure
+//impure input: 9 lines (all inclusive)
+let getUserInput game=
   let rec getConsoleInput () = 
     printf "Please enter a house to move: South(1-6) North(12-7):   "
     let retry () = printfn "Invalid selection, try again" |> getConsoleInput
@@ -266,5 +268,4 @@ let main _ =
 
   let final = playGame (getUserInput startgame) startgame
 
-  //printfn "Hello from F#!"
   0 // return an integer exit code
