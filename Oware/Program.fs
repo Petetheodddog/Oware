@@ -15,7 +15,6 @@ type Game = {
   Player:StartingPosition
   Board:(int*int*int*int*int*int*int*int*int*int*int*int)
   Score:(int*int) //(South, North) respectively
-  House:int
   State:State
 }
 //--------------------------------------End Types--------------------------
@@ -157,22 +156,9 @@ let getState game =
                         |true ->  let game = {game with State = Draw}
                                   game
                         |false -> game
-                        
-(*
-useHouse: accepts a House number and a Board, and makes a move using
-that House.
-*)
-let useHouse hNum game = 
-  let oHouse = hNum
-  match (oppSide hNum game) with //check that player is not manipulating opponents house
-  | true -> game
-  | false ->  match (getSeeds hNum game) with //check that a house has seeds to sow
-              | 0 ->  game
-              | _ ->  let spare = game  //spare copy of game in case a rollback on the move is needed
-                      let numSeeds = (getSeeds hNum game)
-                      let game = setHouseZero hNum game
-                   
-                      let rec distribute game hNum seeds spareGame = 
+
+// distributes all the seeeds from a house to the rest of the houses
+let rec distribute game hNum seeds oHouse spareGame = 
                         let hNum = wrapAround hNum
                         match seeds > 0 with //till no more seeds are left to distribute 
                         | false ->  match game.Player, (sumSide game) with
@@ -185,13 +171,27 @@ let useHouse hNum game =
                                   | true -> let game = incrementHouse (wrapAround (hNum+2)) game
                                             let seeds = seeds-1
                                             let hNum = hNum+2
-                                            distribute game hNum seeds spareGame
+                                            distribute game hNum seeds oHouse spareGame
                                   | false -> let game = incrementHouse (wrapAround (hNum+1)) game
                                              let seeds = seeds-1
                                              let hNum = hNum+1
-                                             distribute game hNum seeds spareGame
+                                             distribute game hNum seeds oHouse spareGame
+
+(*
+useHouse: accepts a House number and a Board, and makes a move using
+that House.
+*)
+let useHouse hNum game = 
+  let oHouse = hNum  //tracks the original house number in case seeds make it all around the board
+  match (oppSide hNum game) with //check that player is not manipulating opponents house
+  | true -> game
+  | false ->  match (getSeeds hNum game) with //check that a house has seeds to sow
+              | 0 ->  game
+              | _ ->  let spare = game  //spare copy of game in case a rollback on the move is needed
+                      let numSeeds = (getSeeds hNum game)
+                      let game = setHouseZero hNum game
                       
-                      getState (swapTurn (distribute game hNum numSeeds spare))
+                      getState (swapTurn (distribute game hNum numSeeds oHouse spare))
 
 
 (*
@@ -203,7 +203,6 @@ let start (position:StartingPosition) =
     Player = position
     Board = (4,4,4,4,4,4,4,4,4,4,4,4);
     Score = (0,0);
-    House = 0; 
     State = match position with 
             | North -> NorthTurn
             | South -> SouthTurn
